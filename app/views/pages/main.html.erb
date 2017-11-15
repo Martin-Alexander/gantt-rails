@@ -1,0 +1,40 @@
+<div style="width: 75vw; overflow-x: scroll">
+	<svg id="gantt"></svg>
+</div>
+
+<button id="save">Save</button>
+
+<script>
+	var tasks = [
+		<% @tasks.each do |task| %>
+			{
+				id: "<%= task["id"] %>",
+				name: "<%= task["name"] %>",
+				start: "<%= task["start"] %>",
+				end: "<%= task["finish"] %>",
+				progress: "<%= task["progress"] %>",
+				dependencies: "<%= task["dependencies"] %>"
+			},
+		<% end %>
+	]
+
+	var gantt = new Gantt('#gantt', tasks, {
+			on_date_change: function(changed_task, start, end) {
+				tasks.forEach(function(task) {
+					if (task.id === changed_task.id) {
+						task.end = end["_d"].getFullYear() + "-" + (end["_d"].getMonth() + 1) + "-" + end["_d"].getDate();
+						task.start = start["_d"].getFullYear() + "-" + (start["_d"].getMonth() + 1) + "-" + start["_d"].getDate();
+					}
+				});
+			}
+	});	
+
+	document.getElementById("save").addEventListener("click", function() {
+		document.getElementById("tasks-field").setAttribute("value", JSON.stringify({tasks: gantt.tasks}));
+		document.getElementById("save-changes").submit();
+	});
+</script>
+
+<%= form_for :tasks, url: save_tasks_path, html: { id: "save-changes" } do %>
+	<% hidden_field(:task_list, :other, id: "tasks-field") %>
+<% end %>
