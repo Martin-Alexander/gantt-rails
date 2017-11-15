@@ -1,12 +1,15 @@
-<div style="width: 75vw; overflow-x: scroll">
+<div id="gannt-container" style="width: 75vw; overflow-x: scroll">
 	<svg id="gantt"></svg>
 </div>
 
 <button id="save">Save</button>
 
 <script>
+	// Use ERB to build an array of taks from the list of task object we got from the database
 	var tasks = [
 		<% @tasks.each do |task| %>
+
+			// This is a JavaScript object being built piece-by-piece with ERB
 			{
 				id: "<%= task["id"] %>",
 				name: "<%= task["name"] %>",
@@ -18,10 +21,17 @@
 		<% end %>
 	]
 
+	// Initializes the Gantt Chart
 	var gantt = new Gantt('#gantt', tasks, {
+
+			// Attaches a special event listener to listen for when the date of a task is changed
 			on_date_change: function(changed_task, start, end) {
+
+				// Find a task in the tasks array with the same ID as the task that was changed
 				tasks.forEach(function(task) {
 					if (task.id === changed_task.id) {
+
+						// Update it's start and end date
 						task.end = end["_d"].getFullYear() + "-" + (end["_d"].getMonth() + 1) + "-" + end["_d"].getDate();
 						task.start = start["_d"].getFullYear() + "-" + (start["_d"].getMonth() + 1) + "-" + start["_d"].getDate();
 					}
@@ -29,12 +39,18 @@
 			}
 	});	
 
+	// Listen for the save button being clicked
 	document.getElementById("save").addEventListener("click", function() {
+
+		// Change the value of the hidden field
 		document.getElementById("tasks-field").setAttribute("value", JSON.stringify({tasks: gantt.tasks}));
+
+		// Tell the hidden for to submit
 		document.getElementById("save-changes").submit();
 	});
 </script>
 
+<%# Hidden form %>
 <%= form_for :tasks, url: save_tasks_path, html: { id: "save-changes" } do %>
 	<% hidden_field(:task_list, :other, id: "tasks-field") %>
 <% end %>
